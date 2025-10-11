@@ -1,20 +1,24 @@
+'use client';
+
 import type { Metadata } from "next";
 import "./globals.css";
-
-export const metadata: Metadata = {
-  title: "プロジェクト予算管理システム",
-  description: "ソフトウェア開発プロジェクトの工数予実管理と収支管理",
-};
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/lib/query-client';
+import { ErrorBoundary } from '@/components/common/error-boundary';
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.Node;
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="ja">
       <body className="antialiased">
-        {children}
+        <ErrorBoundary>
+          <QueryClientProvider client={queryClient}>
+            {children}
+          </QueryClientProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
