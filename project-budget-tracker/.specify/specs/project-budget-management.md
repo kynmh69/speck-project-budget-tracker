@@ -211,6 +211,7 @@
 - **グラフライブラリ**: Chart.js、Recharts、または D3.js（多様なグラフ表示に対応）
 - **状態管理**: Redux、Zustand、または Pinia（複雑なアプリケーション状態の管理）
 - **UIコンポーネント**: Material-UI、Ant Design、または Tailwind CSS（迅速なUI開発）
+- **UIフレームワーク**: shadcn/uiを用いる(モダンなデザイン)
 
 #### バックエンド
 - **言語・フレームワーク**: 
