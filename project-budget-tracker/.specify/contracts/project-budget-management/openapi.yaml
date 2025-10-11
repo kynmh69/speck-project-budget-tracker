@@ -1,0 +1,1241 @@
+openapi: 3.0.3
+info:
+  title: Project Budget Tracker API
+  description: |
+    ソフトウェア開発プロジェクトの工数予実管理と収支管理を行うAPIです。
+    
+    ## 主な機能
+    - 認証・認可（JWT）
+    - プロジェクト管理
+    - タスク管理（予実工数）
+    - メンバー管理
+    - 収支管理
+    - 分析・レポート
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: 開発環境
+  - url: https://api.example.com/api/v1
+    description: 本番環境
+
+tags:
+  - name: Auth
+    description: 認証関連
+  - name: Projects
+    description: プロジェクト管理
+  - name: Tasks
+    description: タスク管理
+  - name: Members
+    description: メンバー管理
+  - name: Budget
+    description: 収支管理
+  - name: Analytics
+    description: 分析・レポート
+  - name: Dashboard
+    description: ダッシュボード
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ==================== 認証 ====================
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: ユーザー登録
+      description: 新規ユーザーアカウントを作成します
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: 登録成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: ログイン
+      description: メールアドレスとパスワードでログインし、JWTトークンを取得します
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: ログイン成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: 現在のユーザー情報取得
+      description: JWTトークンから現在のユーザー情報を取得します
+      responses:
+        '200':
+          description: ユーザー情報
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ==================== プロジェクト ====================
+  /projects:
+    get:
+      tags: [Projects]
+      summary: プロジェクト一覧取得
+      description: |
+        プロジェクトの一覧を取得します。
+        ページネーション、フィルタ、ソート機能をサポートします。
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - name: status
+          in: query
+          description: ステータスでフィルタ
+          schema:
+            type: string
+            enum: [planning, in_progress, completed, on_hold]
+        - name: search
+          in: query
+          description: プロジェクト名で検索
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: ソート順
+          schema:
+            type: string
+            enum: [name, created_at, start_date, end_date]
+            default: created_at
+        - name: order
+          in: query
+          description: ソート方向
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: プロジェクト一覧
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Projects]
+      summary: プロジェクト作成
+      description: 新しいプロジェクトを作成します
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectRequest'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /projects/{id}:
+    get:
+      tags: [Projects]
+      summary: プロジェクト詳細取得
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: プロジェクト詳細
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Projects]
+      summary: プロジェクト更新
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Projects]
+      summary: プロジェクト削除
+      description: プロジェクトを論理削除します
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '204':
+          description: 削除成功
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /projects/{id}/summary:
+    get:
+      tags: [Projects]
+      summary: プロジェクトサマリー取得
+      description: プロジェクトの予実サマリー情報を取得します
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: サマリー情報
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== タスク ====================
+  /projects/{projectId}/tasks:
+    get:
+      tags: [Tasks]
+      summary: タスク一覧取得
+      description: 指定したプロジェクトのタスク一覧を取得します
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [todo, in_progress, completed, blocked]
+      responses:
+        '200':
+          description: タスク一覧
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [Tasks]
+      summary: タスク作成
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /tasks/{id}:
+    get:
+      tags: [Tasks]
+      summary: タスク詳細取得
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: タスク詳細
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Tasks]
+      summary: タスク更新
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Tasks]
+      summary: タスク削除
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 削除成功
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== メンバー ====================
+  /members:
+    get:
+      tags: [Members]
+      summary: メンバー一覧取得
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: メンバー一覧
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Members]
+      summary: メンバー作成
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMemberRequest'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /members/{id}:
+    get:
+      tags: [Members]
+      summary: メンバー詳細取得
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: メンバー詳細
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Members]
+      summary: メンバー更新
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMemberRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== 収支管理 ====================
+  /projects/{id}/budget:
+    get:
+      tags: [Budget]
+      summary: 収支情報取得
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: 収支情報
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Budget'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /projects/{id}/budget/revenue:
+    put:
+      tags: [Budget]
+      summary: 売上金額設定
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                revenue:
+                  type: number
+                  format: double
+                  example: 5000000
+              required:
+                - revenue
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Budget'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /time-entries:
+    post:
+      tags: [Budget]
+      summary: 工数記録作成
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTimeEntryRequest'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ==================== 分析 ====================
+  /projects/{id}/analytics/plan-actual:
+    get:
+      tags: [Analytics]
+      summary: 予実比較データ取得
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: 予実比較データ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanActualData'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /projects/{id}/analytics/budget:
+    get:
+      tags: [Analytics]
+      summary: 収支分析データ取得
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: 収支分析データ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetAnalytics'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /projects/{id}/analytics/trends:
+    get:
+      tags: [Analytics]
+      summary: 推移データ取得
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [daily, weekly, monthly]
+            default: monthly
+      responses:
+        '200':
+          description: 推移データ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrendData'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== ダッシュボード ====================
+  /dashboard:
+    get:
+      tags: [Dashboard]
+      summary: ダッシュボード情報取得
+      responses:
+        '200':
+          description: ダッシュボード情報
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dashboard'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      description: ページ番号
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PerPage:
+      name: per_page
+      in: query
+      description: 1ページあたりの件数
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    ProjectId:
+      name: id
+      in: path
+      required: true
+      description: プロジェクトID
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    # ==================== 認証 ====================
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: password123
+        name:
+          type: string
+          example: 山田太郎
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: password123
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, manager, member]
+        created_at:
+          type: string
+          format: date-time
+
+    # ==================== プロジェクト ====================
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [planning, in_progress, completed, on_hold]
+        budget_amount:
+          type: number
+          format: double
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ProjectDetail:
+      allOf:
+        - $ref: '#/components/schemas/Project'
+        - type: object
+          properties:
+            task_count:
+              type: integer
+            member_count:
+              type: integer
+            budget:
+              $ref: '#/components/schemas/Budget'
+
+    CreateProjectRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: 新規Webシステム開発
+        description:
+          type: string
+        status:
+          type: string
+          enum: [planning, in_progress, completed, on_hold]
+          default: planning
+        budget_amount:
+          type: number
+          format: double
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+
+    UpdateProjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [planning, in_progress, completed, on_hold]
+        budget_amount:
+          type: number
+          format: double
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+
+    ProjectListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    ProjectSummary:
+      type: object
+      properties:
+        total_planned_hours:
+          type: number
+          format: double
+        total_actual_hours:
+          type: number
+          format: double
+        variance_hours:
+          type: number
+          format: double
+        variance_percentage:
+          type: number
+          format: double
+        task_completion_rate:
+          type: number
+          format: double
+
+    # ==================== タスク ====================
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        assigned_to:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        planned_hours:
+          type: number
+          format: double
+        actual_hours:
+          type: number
+          format: double
+        status:
+          type: string
+          enum: [todo, in_progress, completed, blocked]
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateTaskRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        assigned_to:
+          type: string
+          format: uuid
+        planned_hours:
+          type: number
+          format: double
+        status:
+          type: string
+          enum: [todo, in_progress, completed, blocked]
+          default: todo
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+
+    UpdateTaskRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        assigned_to:
+          type: string
+          format: uuid
+        planned_hours:
+          type: number
+          format: double
+        actual_hours:
+          type: number
+          format: double
+        status:
+          type: string
+          enum: [todo, in_progress, completed, blocked]
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+
+    TaskListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # ==================== メンバー ====================
+    Member:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+        hourly_rate:
+          type: number
+          format: double
+        department:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateMemberRequest:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+        hourly_rate:
+          type: number
+          format: double
+        department:
+          type: string
+
+    UpdateMemberRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+        hourly_rate:
+          type: number
+          format: double
+        department:
+          type: string
+
+    MemberListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Member'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # ==================== 収支 ====================
+    Budget:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        revenue:
+          type: number
+          format: double
+        total_cost:
+          type: number
+          format: double
+        profit:
+          type: number
+          format: double
+        profit_rate:
+          type: number
+          format: double
+        currency:
+          type: string
+          example: JPY
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TimeEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        task_id:
+          type: string
+          format: uuid
+        member_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        work_date:
+          type: string
+          format: date
+        hours:
+          type: number
+          format: double
+        hourly_rate_snapshot:
+          type: number
+          format: double
+        comment:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    CreateTimeEntryRequest:
+      type: object
+      required:
+        - task_id
+        - member_id
+        - work_date
+        - hours
+      properties:
+        task_id:
+          type: string
+          format: uuid
+        member_id:
+          type: string
+          format: uuid
+        work_date:
+          type: string
+          format: date
+        hours:
+          type: number
+          format: double
+        comment:
+          type: string
+
+    # ==================== 分析 ====================
+    PlanActualData:
+      type: object
+      properties:
+        tasks:
+          type: array
+          items:
+            type: object
+            properties:
+              task_name:
+                type: string
+              planned_hours:
+                type: number
+              actual_hours:
+                type: number
+              variance:
+                type: number
+
+    BudgetAnalytics:
+      type: object
+      properties:
+        revenue:
+          type: number
+        total_cost:
+          type: number
+        cost_breakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              member_name:
+                type: string
+              cost:
+                type: number
+        profit:
+          type: number
+        profit_rate:
+          type: number
+
+    TrendData:
+      type: object
+      properties:
+        period:
+          type: string
+        data_points:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              planned_hours:
+                type: number
+              actual_hours:
+                type: number
+              cost:
+                type: number
+
+    # ==================== ダッシュボード ====================
+    Dashboard:
+      type: object
+      properties:
+        total_projects:
+          type: integer
+        active_projects:
+          type: integer
+        completed_projects:
+          type: integer
+        total_revenue:
+          type: number
+        total_profit:
+          type: number
+        average_profit_rate:
+          type: number
+        recent_projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+
+    # ==================== 共通 ====================
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: リクエストが不正です
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: 認証が必要です
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: アクセス権限がありません
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: リソースが見つかりません
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: リソースが競合しています
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: サーバー内部エラー
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
