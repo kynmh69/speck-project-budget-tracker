@@ -70,6 +70,10 @@ var (
 		return NewAppError("ALREADY_EXISTS", fmt.Sprintf("%s already exists", resource), http.StatusConflict, nil)
 	}
 
+	ErrConflict = func(message string) *AppError {
+		return NewAppError("CONFLICT", message, http.StatusConflict, nil)
+	}
+
 	// Internal errors
 	ErrInternal = func(err error) *AppError {
 		return NewAppError("INTERNAL_ERROR", "An internal error occurred", http.StatusInternalServerError, err)
