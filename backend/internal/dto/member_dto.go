@@ -27,15 +27,15 @@ type UpdateMemberRequest struct {
 
 // MemberResponse represents a member response
 type MemberResponse struct {
-	ID         uuid.UUID `json:"id"`
+	ID         uuid.UUID  `json:"id"`
 	UserID     *uuid.UUID `json:"user_id,omitempty"`
-	Name       string    `json:"name"`
-	Email      string    `json:"email"`
-	Role       *string   `json:"role,omitempty"`
-	HourlyRate float64   `json:"hourly_rate"`
-	Department *string   `json:"department,omitempty"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	Name       string     `json:"name"`
+	Email      string     `json:"email"`
+	Role       *string    `json:"role,omitempty"`
+	HourlyRate float64    `json:"hourly_rate"`
+	Department *string    `json:"department,omitempty"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  time.Time  `json:"updated_at"`
 }
 
 // MemberListResponse represents a paginated list of members
@@ -53,13 +53,13 @@ type AssignMemberRequest struct {
 
 // ProjectMemberResponse represents a project member assignment response
 type ProjectMemberResponse struct {
-	ID                 uuid.UUID `json:"id"`
-	ProjectID          uuid.UUID `json:"project_id"`
-	MemberID           uuid.UUID `json:"member_id"`
-	JoinedAt           string    `json:"joined_at"`
-	LeftAt             *string   `json:"left_at,omitempty"`
-	AllocationRate     float64   `json:"allocation_rate"`
-	HourlyRateSnapshot *float64  `json:"hourly_rate_snapshot,omitempty"`
+	ID                 uuid.UUID       `json:"id"`
+	ProjectID          uuid.UUID       `json:"project_id"`
+	MemberID           uuid.UUID       `json:"member_id"`
+	JoinedAt           string          `json:"joined_at"`
+	LeftAt             *string         `json:"left_at,omitempty"`
+	AllocationRate     float64         `json:"allocation_rate"`
+	HourlyRateSnapshot *float64        `json:"hourly_rate_snapshot,omitempty"`
 	Member             *MemberResponse `json:"member,omitempty"`
 }
 
