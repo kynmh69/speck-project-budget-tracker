@@ -252,33 +252,33 @@
 
 ### Backend: Budget Management
 
-- [ ] T128 [US3] MemberRepository実装（`backend/internal/repository/member_repository.go`）
-- [ ] T129 [US3] TimeEntryRepository実装（`backend/internal/repository/time_entry_repository.go`）
-- [ ] T130 [US3] BudgetService実装（`backend/internal/service/budget_service.go`）- コスト・利益計算
-- [ ] T131 [US3] MemberService実装（`backend/internal/service/member_service.go`）
-- [ ] T132 [US3] BudgetDTO実装（`backend/internal/dto/budget_dto.go`）
-- [ ] T133 [US3] MemberDTO実装（`backend/internal/dto/member_dto.go`）
-- [ ] T134 [US3] BudgetHandler実装（`backend/internal/handler/budget_handler.go`）
-- [ ] T135 [US3] MemberHandler実装（`backend/internal/handler/member_handler.go`）
-- [ ] T136 [US3] 売上登録エンドポイント（`PUT /api/v1/projects/{id}/budget/revenue`）
-- [ ] T137 [US3] メンバー作成エンドポイント（`POST /api/v1/members`）
-- [ ] T138 [US3] メンバー単価設定（`PUT /api/v1/members/{id}`）
-- [ ] T139 [US3] 工数記録エンドポイント（`POST /api/v1/time-entries`）
-- [ ] T140 [US3] 収支サマリー取得（`GET /api/v1/projects/{id}/budget`）- コスト・利益計算
+- [X] T128 [US3] MemberRepository実装（`backend/internal/repository/member_repository.go`）
+- [X] T129 [US3] TimeEntryRepository実装（`backend/internal/repository/time_entry_repository.go`）
+- [X] T130 [US3] BudgetService実装（`backend/internal/service/budget_service.go`）- コスト・利益計算
+- [X] T131 [US3] MemberService実装（`backend/internal/service/member_service.go`）
+- [X] T132 [US3] BudgetDTO実装（`backend/internal/dto/budget_dto.go`）
+- [X] T133 [US3] MemberDTO実装（`backend/internal/dto/member_dto.go`）
+- [X] T134 [US3] BudgetHandler実装（`backend/internal/handler/budget_handler.go`）
+- [X] T135 [US3] MemberHandler実装（`backend/internal/handler/member_handler.go`）
+- [X] T136 [US3] 売上登録エンドポイント（`PUT /api/v1/projects/{id}/budget/revenue`）
+- [X] T137 [US3] メンバー作成エンドポイント（`POST /api/v1/members`）
+- [X] T138 [US3] メンバー単価設定（`PUT /api/v1/members/{id}`）
+- [X] T139 [US3] 工数記録エンドポイント（`POST /api/v1/time-entries`）
+- [X] T140 [US3] 収支サマリー取得（`GET /api/v1/projects/{id}/budget`）- コスト・利益計算
 - [ ] T141 [P] [US3] BudgetService単体テスト（`backend/tests/unit/service/budget_service_test.go`）
 - [ ] T142 [P] [US3] Budget API統合テスト（`backend/tests/integration/budget_test.go`）
 
 ### Frontend: Budget Management UI
 
-- [ ] T143 [US3] TypeScript型定義: Budget, Member（`frontend/src/types/budget.ts`, `member.ts`）
-- [ ] T144 [US3] Zodスキーマ: Member（`frontend/src/schemas/member-schema.ts`）
-- [ ] T145 [US3] 収支フック（`frontend/src/hooks/use-budget.ts`）
-- [ ] T146 [US3] メンバーフック（`frontend/src/hooks/use-members.ts`）
-- [ ] T147 [US3] 収支サマリーコンポーネント（`frontend/src/components/budget/budget-summary.tsx`）
-- [ ] T148 [US3] コスト内訳コンポーネント（`frontend/src/components/budget/cost-breakdown.tsx`）
-- [ ] T149 [US3] 売上入力フォーム実装
-- [ ] T150 [US3] 収支管理ページ（`frontend/src/app/(dashboard)/projects/[id]/budget/page.tsx`）
-- [ ] T151 [US3] 赤字時の警告表示実装
+- [X] T143 [US3] TypeScript型定義: Budget, Member（`frontend/src/types/budget.ts`, `member.ts`）
+- [X] T144 [US3] Zodスキーマ: Member（`frontend/src/schemas/member-schema.ts`）
+- [X] T145 [US3] 収支フック（`frontend/src/hooks/use-budget.ts`）
+- [X] T146 [US3] メンバーフック（`frontend/src/hooks/use-members.ts`）
+- [X] T147 [US3] 収支サマリーコンポーネント（`frontend/src/components/budget/budget-summary.tsx`）
+- [X] T148 [US3] コスト内訳コンポーネント（`frontend/src/components/budget/cost-breakdown.tsx`）
+- [X] T149 [US3] 売上入力フォーム実装
+- [X] T150 [US3] 収支管理ページ（`frontend/src/app/(dashboard)/projects/[id]/budget/page.tsx`）
+- [X] T151 [US3] 赤字時の警告表示実装
 - [ ] T152 [P] [US3] 収支管理E2Eテスト（`frontend/tests/e2e/budget.spec.ts`）
 
 **Checkpoint**: 収支管理が完全に機能し、利益が自動計算される。MVP完成！
