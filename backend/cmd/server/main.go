@@ -10,6 +10,7 @@ import (
 	"github.com/your-org/project-budget-tracker/backend/internal/database"
 	"github.com/your-org/project-budget-tracker/backend/internal/handler"
 	custommiddleware "github.com/your-org/project-budget-tracker/backend/internal/middleware"
+	"github.com/your-org/project-budget-tracker/backend/internal/repository"
 	"github.com/your-org/project-budget-tracker/backend/internal/service"
 )
 
@@ -43,10 +44,13 @@ func main() {
 
 	// Initialize services
 	authService := service.NewAuthService(database.GetDB(), cfg.JWTSecret)
+	projectRepo := repository.NewProjectRepository(database.GetDB())
+	projectService := service.NewProjectService(projectRepo)
 	taskService := service.NewTaskService(database.GetDB())
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authService)
+	projectHandler := handler.NewProjectHandler(projectService)
 	taskHandler := handler.NewTaskHandler(taskService)
 
 	// API v1 routes
@@ -60,6 +64,13 @@ func main() {
 
 	// Protected routes
 	protected := v1.Group("", custommiddleware.AuthMiddleware(authService))
+
+	// Project routes
+	protected.POST("/projects", projectHandler.CreateProject)
+	protected.GET("/projects", projectHandler.ListProjects)
+	protected.GET("/projects/:id", projectHandler.GetProject)
+	protected.PUT("/projects/:id", projectHandler.UpdateProject)
+	protected.DELETE("/projects/:id", projectHandler.DeleteProject)
 
 	// Task routes
 	protected.POST("/projects/:projectId/tasks", taskHandler.CreateTask)
