@@ -43,9 +43,11 @@ func main() {
 
 	// Initialize services
 	authService := service.NewAuthService(database.GetDB(), cfg.JWTSecret)
+	taskService := service.NewTaskService(database.GetDB())
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authService)
+	taskHandler := handler.NewTaskHandler(taskService)
 
 	// API v1 routes
 	v1 := e.Group("/api/v1")
@@ -56,9 +58,16 @@ func main() {
 	auth.POST("/login", authHandler.Login)
 	auth.GET("/me", authHandler.Me, custommiddleware.AuthMiddleware(authService))
 
-	// Protected routes example
-	// projects := v1.Group("/projects", custommiddleware.AuthMiddleware(authService))
-	// projects.GET("", projectHandler.List)
+	// Protected routes
+	protected := v1.Group("", custommiddleware.AuthMiddleware(authService))
+
+	// Task routes
+	protected.POST("/projects/:projectId/tasks", taskHandler.CreateTask)
+	protected.GET("/projects/:projectId/tasks", taskHandler.ListTasks)
+	protected.GET("/projects/:id/summary", taskHandler.GetProjectSummary)
+	protected.GET("/tasks/:id", taskHandler.GetTask)
+	protected.PUT("/tasks/:id", taskHandler.UpdateTask)
+	protected.DELETE("/tasks/:id", taskHandler.DeleteTask)
 
 	// Start server
 	log.Printf("Starting server on %s", cfg.ServerAddress)

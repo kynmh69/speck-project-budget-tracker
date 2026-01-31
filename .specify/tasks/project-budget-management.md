@@ -214,30 +214,30 @@
 
 ### Backend: Task Management
 
-- [ ] T106 [US2] TaskRepository実装（`backend/internal/repository/task_repository.go`）
-- [ ] T107 [US2] TaskService実装（`backend/internal/service/task_service.go`）- 予実差異計算含む
-- [ ] T108 [US2] TaskDTO実装（`backend/internal/dto/task_dto.go`）
-- [ ] T109 [US2] TaskHandler実装（`backend/internal/handler/task_handler.go`）
-- [ ] T110 [US2] タスク作成エンドポイント（`POST /api/v1/projects/{projectId}/tasks`）
-- [ ] T111 [US2] タスク一覧取得（`GET /api/v1/projects/{projectId}/tasks`）
-- [ ] T112 [US2] タスク詳細取得（`GET /api/v1/tasks/{id}`）
-- [ ] T113 [US2] タスク更新（`PUT /api/v1/tasks/{id}`）- 予定・実績工数更新
-- [ ] T114 [US2] タスク削除（`DELETE /api/v1/tasks/{id}`）
-- [ ] T115 [US2] プロジェクト予実サマリー取得（`GET /api/v1/projects/{id}/summary`）
-- [ ] T116 [P] [US2] TaskService単体テスト（`backend/tests/unit/service/task_service_test.go`）
-- [ ] T117 [P] [US2] Task API統合テスト（`backend/tests/integration/task_test.go`）
+- [X] T106 [US2] TaskRepository実装（`backend/internal/repository/task_repository.go`）
+- [X] T107 [US2] TaskService実装（`backend/internal/service/task_service.go`）- 予実差異計算含む
+- [X] T108 [US2] TaskDTO実装（`backend/internal/dto/task_dto.go`）
+- [X] T109 [US2] TaskHandler実装（`backend/internal/handler/task_handler.go`）
+- [X] T110 [US2] タスク作成エンドポイント（`POST /api/v1/projects/{projectId}/tasks`）
+- [X] T111 [US2] タスク一覧取得（`GET /api/v1/projects/{projectId}/tasks`）
+- [X] T112 [US2] タスク詳細取得（`GET /api/v1/tasks/{id}`）
+- [X] T113 [US2] タスク更新（`PUT /api/v1/tasks/{id}`）- 予定・実績工数更新
+- [X] T114 [US2] タスク削除（`DELETE /api/v1/tasks/{id}`）
+- [X] T115 [US2] プロジェクト予実サマリー取得（`GET /api/v1/projects/{id}/summary`）
+- [X] T116 [P] [US2] TaskService単体テスト（`backend/tests/unit/service/task_service_test.go`）
+- [X] T117 [P] [US2] Task API統合テスト（`backend/tests/integration/task_test.go`）
 
 ### Frontend: Task Management UI
 
-- [ ] T118 [US2] TypeScript型定義: Task（`frontend/src/types/task.ts`）
-- [ ] T119 [US2] Zodスキーマ: Task（`frontend/src/schemas/task-schema.ts`）
-- [ ] T120 [US2] タスクフック（`frontend/src/hooks/use-tasks.ts`）
-- [ ] T121 [US2] タスクリストコンポーネント（`frontend/src/components/tasks/task-list.tsx`）- Table使用
-- [ ] T122 [US2] タスクアイテムコンポーネント（`frontend/src/components/tasks/task-item.tsx`）- 予実差異表示
-- [ ] T123 [US2] タスクフォームコンポーネント（`frontend/src/components/tasks/task-form.tsx`）
-- [ ] T124 [US2] 予実サマリーコンポーネント（`frontend/src/components/tasks/plan-actual-summary.tsx`）
-- [ ] T125 [US2] タスク管理ページ（`frontend/src/app/(dashboard)/projects/[id]/tasks/page.tsx`）
-- [ ] T126 [US2] 工数超過時の警告色表示ロジック実装
+- [X] T118 [US2] TypeScript型定義: Task（`frontend/src/types/task.ts`）
+- [X] T119 [US2] Zodスキーマ: Task（`frontend/src/schemas/task-schema.ts`）
+- [X] T120 [US2] タスクフック（`frontend/src/hooks/use-tasks.ts`）
+- [X] T121 [US2] タスクリストコンポーネント（`frontend/src/components/tasks/task-list.tsx`）- Table使用
+- [X] T122 [US2] タスクアイテムコンポーネント（`frontend/src/components/tasks/task-item.tsx`）- 予実差異表示
+- [X] T123 [US2] タスクフォームコンポーネント（`frontend/src/components/tasks/task-form.tsx`）
+- [X] T124 [US2] 予実サマリーコンポーネント（`frontend/src/components/tasks/plan-actual-summary.tsx`）
+- [X] T125 [US2] タスク管理ページ（`frontend/src/app/(dashboard)/projects/[id]/tasks/page.tsx`）
+- [X] T126 [US2] 工数超過時の警告色表示ロジック実装
 - [ ] T127 [P] [US2] タスク管理E2Eテスト（`frontend/tests/e2e/tasks.spec.ts`）
 
 **Checkpoint**: タスクの予実管理が完全に機能し、予実差異が正確に表示される
