@@ -1,5 +1,4 @@
 package service
-package service_test
 
 import (
 	"testing"

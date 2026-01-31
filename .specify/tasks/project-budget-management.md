@@ -265,8 +265,8 @@
 - [X] T138 [US3] メンバー単価設定（`PUT /api/v1/members/{id}`）
 - [X] T139 [US3] 工数記録エンドポイント（`POST /api/v1/time-entries`）
 - [X] T140 [US3] 収支サマリー取得（`GET /api/v1/projects/{id}/budget`）- コスト・利益計算
-- [ ] T141 [P] [US3] BudgetService単体テスト（`backend/tests/unit/service/budget_service_test.go`）
-- [ ] T142 [P] [US3] Budget API統合テスト（`backend/tests/integration/budget_test.go`）
+- [X] T141 [P] [US3] BudgetService単体テスト（`backend/tests/unit/service/budget_service_test.go`）
+- [X] T142 [P] [US3] Budget API統合テスト（`backend/tests/integration/budget_test.go`）
 
 ### Frontend: Budget Management UI
 
