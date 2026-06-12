@@ -65,9 +65,13 @@ func (h *BudgetHandler) UpdateRevenue(c echo.Context) error {
 
 // CreateTimeEntry handles POST /api/v1/time-entries
 func (h *BudgetHandler) CreateTimeEntry(c echo.Context) error {
-	// Get user ID from context
-	userID, ok := c.Get("user_id").(uuid.UUID)
+	// Get user ID from context (AuthMiddleware stores it as a string)
+	userIDStr, ok := c.Get("user_id").(string)
 	if !ok {
+		return c.JSON(http.StatusUnauthorized, dto.ErrorResponse("UNAUTHORIZED", "User not authenticated", nil))
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
 		return c.JSON(http.StatusUnauthorized, dto.ErrorResponse("UNAUTHORIZED", "User not authenticated", nil))
 	}
 
