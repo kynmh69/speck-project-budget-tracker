@@ -121,14 +121,14 @@ func seedProjects(tx *gorm.DB, user *models.User, members []models.Member) error
 		{
 			name:         "ECサイトリニューアル",
 			description:  "既存ECサイトのフルリニューアル。フロントエンド刷新とバックエンドAPI化。",
-			status:       "active",
+			status:       "in_progress",
 			budgetAmount: 5000000,
 			revenue:      6000000,
 			startDate:    today.AddDate(0, -2, 0),
 			endDate:      today.AddDate(0, 2, 0),
 			tasks: []taskSeed{
-				{name: "要件定義", status: "done", plannedHours: 40, actualHours: 36, assignee: pm},
-				{name: "画面デザイン", status: "done", plannedHours: 60, actualHours: 72, assignee: des},
+				{name: "要件定義", status: "completed", plannedHours: 40, actualHours: 36, assignee: pm},
+				{name: "画面デザイン", status: "completed", plannedHours: 60, actualHours: 72, assignee: des},
 				{name: "API実装", status: "in_progress", plannedHours: 120, actualHours: 80, assignee: eng},
 				{name: "フロントエンド実装", status: "todo", plannedHours: 100, actualHours: 0, assignee: eng},
 			},
@@ -155,9 +155,9 @@ func seedProjects(tx *gorm.DB, user *models.User, members []models.Member) error
 			startDate:    today.AddDate(0, -6, 0),
 			endDate:      today.AddDate(0, -1, 0),
 			tasks: []taskSeed{
-				{name: "障害対応", status: "done", plannedHours: 40, actualHours: 55, assignee: eng},
-				{name: "機能改修", status: "done", plannedHours: 80, actualHours: 76, assignee: eng},
-				{name: "運用ドキュメント整備", status: "done", plannedHours: 20, actualHours: 18, assignee: pm},
+				{name: "障害対応", status: "completed", plannedHours: 40, actualHours: 55, assignee: eng},
+				{name: "機能改修", status: "completed", plannedHours: 80, actualHours: 76, assignee: eng},
+				{name: "運用ドキュメント整備", status: "completed", plannedHours: 20, actualHours: 18, assignee: pm},
 			},
 		},
 	}
