@@ -49,6 +49,7 @@ func main() {
 	taskService := service.NewTaskService(database.GetDB())
 	memberService := service.NewMemberService(database.GetDB())
 	budgetService := service.NewBudgetService(database.GetDB())
+	dashboardService := service.NewDashboardService(database.GetDB())
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authService)
@@ -56,6 +57,7 @@ func main() {
 	taskHandler := handler.NewTaskHandler(taskService)
 	memberHandler := handler.NewMemberHandler(memberService)
 	budgetHandler := handler.NewBudgetHandler(budgetService)
+	dashboardHandler := handler.NewDashboardHandler(dashboardService)
 
 	// API v1 routes
 	v1 := e.Group("/api/v1")
@@ -95,6 +97,9 @@ func main() {
 	protected.GET("/projects/:id/members", memberHandler.GetProjectMembers)
 	protected.POST("/projects/:id/members", memberHandler.AssignMemberToProject)
 	protected.DELETE("/projects/:id/members/:memberId", memberHandler.RemoveMemberFromProject)
+
+	// Dashboard routes
+	protected.GET("/dashboard", dashboardHandler.GetDashboard)
 
 	// Budget routes
 	protected.GET("/projects/:id/budget", budgetHandler.GetBudget)
