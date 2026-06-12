@@ -63,10 +63,14 @@ type ProjectListResponse struct {
 
 // ProjectListParams represents query parameters for listing projects
 type ProjectListParams struct {
-	Page    int    `query:"page"`
-	PerPage int    `query:"per_page"`
-	Status  string `query:"status"`
-	Search  string `query:"search"`
-	Sort    string `query:"sort"`
-	Order   string `query:"order"`
+	Page          int      `query:"page"`
+	PerPage       int      `query:"per_page"`
+	Status        string   `query:"status"`
+	Search        string   `query:"search"`
+	Sort          string   `query:"sort"`
+	Order         string   `query:"order"`
+	PeriodFrom    string   `query:"period_from"`
+	PeriodTo      string   `query:"period_to"`
+	MinProfitRate *float64 `query:"min_profit_rate"`
+	MaxProfitRate *float64 `query:"max_profit_rate"`
 }
