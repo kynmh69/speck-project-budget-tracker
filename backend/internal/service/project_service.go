@@ -153,13 +153,30 @@ func (s *ProjectService) ListProjects(userIDStr string, params dto.ProjectListPa
 	}
 
 	repoParams := repository.ProjectListParams{
-		UserID:  userID,
-		Page:    params.Page,
-		PerPage: params.PerPage,
-		Status:  params.Status,
-		Search:  params.Search,
-		Sort:    params.Sort,
-		Order:   params.Order,
+		UserID:        userID,
+		Page:          params.Page,
+		PerPage:       params.PerPage,
+		Status:        params.Status,
+		Search:        params.Search,
+		Sort:          params.Sort,
+		Order:         params.Order,
+		MinProfitRate: params.MinProfitRate,
+		MaxProfitRate: params.MaxProfitRate,
+	}
+
+	if params.PeriodFrom != "" {
+		from, err := time.Parse("2006-01-02", params.PeriodFrom)
+		if err != nil {
+			return nil, apperrors.ErrValidationFailed("period_from must be in YYYY-MM-DD format")
+		}
+		repoParams.PeriodFrom = &from
+	}
+	if params.PeriodTo != "" {
+		to, err := time.Parse("2006-01-02", params.PeriodTo)
+		if err != nil {
+			return nil, apperrors.ErrValidationFailed("period_to must be in YYYY-MM-DD format")
+		}
+		repoParams.PeriodTo = &to
 	}
 
 	projects, total, err := s.projectRepo.List(repoParams)
