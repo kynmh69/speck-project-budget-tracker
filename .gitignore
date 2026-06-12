@@ -62,3 +62,8 @@ Thumbs.db
 # Production
 /frontend/.env.production
 /backend/.env.production
+
+# Playwright
+frontend/test-results/
+frontend/playwright-report/
+frontend/next-env.d.ts
