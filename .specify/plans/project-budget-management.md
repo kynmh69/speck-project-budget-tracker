@@ -97,6 +97,8 @@
 │   └── project-budget-management/
 │       ├── openapi.yaml                  # API contract (Phase 1)
 │       └── types.ts                      # Shared TypeScript types
+├── quickstart/
+│   └── project-budget-management.md      # Validation guide (Phase 1)
 └── tasks/
     └── project-budget-management.md      # Task breakdown (Phase 2)
 ```
@@ -915,6 +917,6 @@ project-budget-tracker/
 
 ---
 
-**Plan Status**: Draft  
-**Last Updated**: 2025-10-11  
-**Next Review**: Phase 0完了時
+**Plan Status**: In Progress — MVP実装完了（tasks Phase 3-5 / US1-3）、現在 tasks Phase 6（MVP統合テストとリファクタリング）  
+**Last Updated**: 2026-06-12  
+**Next Review**: tasks Phase 6完了時（MVP品質保証後、P2機能着手前）

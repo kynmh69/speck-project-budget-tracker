@@ -62,3 +62,6 @@ Thumbs.db
 # Production
 /frontend/.env.production
 /backend/.env.production
+
+# Claude Code local settings
+.claude/settings.local.json
