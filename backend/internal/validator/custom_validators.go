@@ -20,3 +20,12 @@ func Validate(s interface{}) error {
 func GetValidator() *validator.Validate {
 	return validate
 }
+
+// EchoValidator adapts the package validator to echo's Validator interface,
+// so handlers can call c.Validate(&req).
+type EchoValidator struct{}
+
+// Validate implements the echo.Validator interface.
+func (v *EchoValidator) Validate(i interface{}) error {
+	return validate.Struct(i)
+}

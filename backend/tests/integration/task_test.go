@@ -13,20 +13,89 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	"github.com/your-org/project-budget-tracker/backend/internal/dto"
 	"github.com/your-org/project-budget-tracker/backend/internal/handler"
 	"github.com/your-org/project-budget-tracker/backend/internal/models"
 	"github.com/your-org/project-budget-tracker/backend/internal/service"
+	customvalidator "github.com/your-org/project-budget-tracker/backend/internal/validator"
 )
+
+// setupTaskTestDBSchema はSQLite互換のテーブルスキーマを作成
+func setupTaskTestDBSchema(t *testing.T, db *gorm.DB) {
+	require.NoError(t, db.Exec(`
+		CREATE TABLE IF NOT EXISTS users (
+			id TEXT PRIMARY KEY,
+			email TEXT NOT NULL,
+			password_hash TEXT NOT NULL,
+			name TEXT NOT NULL,
+			role TEXT NOT NULL DEFAULT 'member',
+			created_at DATETIME,
+			updated_at DATETIME,
+			deleted_at DATETIME
+		)
+	`).Error)
+
+	require.NoError(t, db.Exec(`
+		CREATE TABLE IF NOT EXISTS projects (
+			id TEXT PRIMARY KEY,
+			user_id TEXT NOT NULL,
+			name TEXT NOT NULL,
+			description TEXT,
+			status TEXT NOT NULL DEFAULT 'planning',
+			budget_amount REAL,
+			start_date DATE,
+			end_date DATE,
+			created_at DATETIME,
+			updated_at DATETIME,
+			deleted_at DATETIME
+		)
+	`).Error)
+
+	require.NoError(t, db.Exec(`
+		CREATE TABLE IF NOT EXISTS tasks (
+			id TEXT PRIMARY KEY,
+			project_id TEXT NOT NULL,
+			assigned_to TEXT,
+			name TEXT NOT NULL,
+			description TEXT,
+			planned_hours REAL DEFAULT 0,
+			actual_hours REAL DEFAULT 0,
+			status TEXT NOT NULL DEFAULT 'todo',
+			start_date DATE,
+			end_date DATE,
+			created_at DATETIME,
+			updated_at DATETIME,
+			deleted_at DATETIME
+		)
+	`).Error)
+
+	require.NoError(t, db.Exec(`
+		CREATE TABLE IF NOT EXISTS members (
+			id TEXT PRIMARY KEY,
+			user_id TEXT,
+			name TEXT NOT NULL,
+			email TEXT NOT NULL,
+			role TEXT,
+			hourly_rate REAL DEFAULT 0,
+			department TEXT,
+			created_at DATETIME,
+			updated_at DATETIME,
+			deleted_at DATETIME
+		)
+	`).Error)
+}
 
 func setupTestServer(t *testing.T) (*echo.Echo, *gorm.DB, *models.Project) {
 	// Setup in-memory database
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
 	require.NoError(t, err)
 
-	err = db.AutoMigrate(&models.User{}, &models.Project{}, &models.Task{}, &models.Member{})
-	require.NoError(t, err)
+	// SQLite互換のスキーマを作成
+	setupTaskTestDBSchema(t, db)
 
 	// Create test user and project
 	user := &models.User{
@@ -48,6 +117,7 @@ func setupTestServer(t *testing.T) (*echo.Echo, *gorm.DB, *models.Project) {
 
 	// Setup Echo server
 	e := echo.New()
+	e.Validator = &customvalidator.EchoValidator{}
 
 	// Initialize service and handler
 	taskService := service.NewTaskService(db)

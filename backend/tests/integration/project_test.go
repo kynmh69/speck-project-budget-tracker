@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	"github.com/your-org/project-budget-tracker/backend/internal/dto"
 	"github.com/your-org/project-budget-tracker/backend/internal/handler"
@@ -22,13 +23,94 @@ import (
 	"github.com/your-org/project-budget-tracker/backend/internal/service"
 )
 
+// setupProjectTestDBSchema はSQLite互換のテーブルスキーマを作成
+func setupProjectTestDBSchema(t *testing.T, db *gorm.DB) {
+	require.NoError(t, db.Exec(`
+		CREATE TABLE IF NOT EXISTS users (
+			id TEXT PRIMARY KEY,
+			email TEXT NOT NULL,
+			password_hash TEXT NOT NULL,
+			name TEXT NOT NULL,
+			role TEXT NOT NULL DEFAULT 'member',
+			created_at DATETIME,
+			updated_at DATETIME,
+			deleted_at DATETIME
+		)
+	`).Error)
+
+	require.NoError(t, db.Exec(`
+		CREATE TABLE IF NOT EXISTS projects (
+			id TEXT PRIMARY KEY,
+			user_id TEXT NOT NULL,
+			name TEXT NOT NULL,
+			description TEXT,
+			status TEXT NOT NULL DEFAULT 'planning',
+			budget_amount REAL,
+			start_date DATE,
+			end_date DATE,
+			created_at DATETIME,
+			updated_at DATETIME,
+			deleted_at DATETIME
+		)
+	`).Error)
+
+	require.NoError(t, db.Exec(`
+		CREATE TABLE IF NOT EXISTS tasks (
+			id TEXT PRIMARY KEY,
+			project_id TEXT NOT NULL,
+			assigned_to TEXT,
+			name TEXT NOT NULL,
+			description TEXT,
+			planned_hours REAL DEFAULT 0,
+			actual_hours REAL DEFAULT 0,
+			status TEXT NOT NULL DEFAULT 'todo',
+			start_date DATE,
+			end_date DATE,
+			created_at DATETIME,
+			updated_at DATETIME,
+			deleted_at DATETIME
+		)
+	`).Error)
+
+	require.NoError(t, db.Exec(`
+		CREATE TABLE IF NOT EXISTS members (
+			id TEXT PRIMARY KEY,
+			user_id TEXT,
+			name TEXT NOT NULL,
+			email TEXT NOT NULL,
+			role TEXT,
+			hourly_rate REAL DEFAULT 0,
+			department TEXT,
+			created_at DATETIME,
+			updated_at DATETIME,
+			deleted_at DATETIME
+		)
+	`).Error)
+
+	require.NoError(t, db.Exec(`
+		CREATE TABLE IF NOT EXISTS budgets (
+			id TEXT PRIMARY KEY,
+			project_id TEXT NOT NULL,
+			revenue REAL DEFAULT 0,
+			total_cost REAL DEFAULT 0,
+			profit REAL DEFAULT 0,
+			profit_rate REAL DEFAULT 0,
+			currency TEXT NOT NULL DEFAULT 'JPY',
+			created_at DATETIME,
+			updated_at DATETIME
+		)
+	`).Error)
+}
+
 func setupProjectTestServer(t *testing.T) (*echo.Echo, *gorm.DB, *models.User) {
 	// Setup in-memory database
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
 	require.NoError(t, err)
 
-	err = db.AutoMigrate(&models.User{}, &models.Project{}, &models.Task{}, &models.Member{})
-	require.NoError(t, err)
+	// SQLite互換のスキーマを作成
+	setupProjectTestDBSchema(t, db)
 
 	// Create test user
 	user := &models.User{
@@ -131,17 +213,18 @@ func TestProjectAPI_GetProject(t *testing.T) {
 	e, db, user := setupProjectTestServer(t)
 
 	// Create a project
+	desc := "プロジェクトの説明"
 	project := &models.Project{
-		ID:          1,
-		OwnerID:     uint(user.ID[0])<<24 | uint(user.ID[1])<<16 | uint(user.ID[2])<<8 | uint(user.ID[3]),
+		ID:          uuid.New(),
+		UserID:      user.ID,
 		Name:        "テストプロジェクト",
-		Description: "プロジェクトの説明",
+		Description: &desc,
 		Status:      "planning",
 	}
 	require.NoError(t, db.Create(project).Error)
 
 	t.Run("正常系: プロジェクトを取得できる", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/projects/%d", project.ID), nil)
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/projects/%s", project.ID.String()), nil)
 		rec := httptest.NewRecorder()
 
 		e.ServeHTTP(rec, req)
@@ -155,7 +238,7 @@ func TestProjectAPI_GetProject(t *testing.T) {
 	})
 
 	t.Run("異常系: 存在しないプロジェクトIDでエラー", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/v1/projects/9999", nil)
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/projects/%s", uuid.New().String()), nil)
 		rec := httptest.NewRecorder()
 
 		e.ServeHTTP(rec, req)
@@ -182,10 +265,12 @@ func TestProjectAPI_ListProjects(t *testing.T) {
 		if i%3 == 0 {
 			status = "in_progress"
 		}
+		desc := fmt.Sprintf("プロジェクト %d の説明", i+1)
 		project := &models.Project{
-			OwnerID:     uint(user.ID[0])<<24 | uint(user.ID[1])<<16 | uint(user.ID[2])<<8 | uint(user.ID[3]),
+			ID:          uuid.New(),
+			UserID:      user.ID,
 			Name:        fmt.Sprintf("プロジェクト %d", i+1),
-			Description: fmt.Sprintf("プロジェクト %d の説明", i+1),
+			Description: &desc,
 			Status:      status,
 		}
 		require.NoError(t, db.Create(project).Error)
@@ -224,7 +309,7 @@ func TestProjectAPI_ListProjects(t *testing.T) {
 	})
 
 	t.Run("正常系: キーワードで検索できる", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/v1/projects?keyword=プロジェクト 1", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/projects?keyword=%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88%201", nil)
 		rec := httptest.NewRecorder()
 
 		e.ServeHTTP(rec, req)
@@ -237,11 +322,12 @@ func TestProjectAPI_UpdateProject(t *testing.T) {
 	e, db, user := setupProjectTestServer(t)
 
 	// Create a project
+	desc := "更新前の説明"
 	project := &models.Project{
-		ID:          1,
-		OwnerID:     uint(user.ID[0])<<24 | uint(user.ID[1])<<16 | uint(user.ID[2])<<8 | uint(user.ID[3]),
+		ID:          uuid.New(),
+		UserID:      user.ID,
 		Name:        "更新前プロジェクト",
-		Description: "更新前の説明",
+		Description: &desc,
 		Status:      "planning",
 	}
 	require.NoError(t, db.Create(project).Error)
@@ -254,7 +340,7 @@ func TestProjectAPI_UpdateProject(t *testing.T) {
 		}
 		body, _ := json.Marshal(reqBody)
 
-		req := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/projects/%d", project.ID), bytes.NewReader(body))
+		req := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/projects/%s", project.ID.String()), bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -274,7 +360,7 @@ func TestProjectAPI_UpdateProject(t *testing.T) {
 		}
 		body, _ := json.Marshal(reqBody)
 
-		req := httptest.NewRequest(http.MethodPut, "/api/v1/projects/9999", bytes.NewReader(body))
+		req := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/projects/%s", uuid.New().String()), bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -289,15 +375,15 @@ func TestProjectAPI_DeleteProject(t *testing.T) {
 
 	// Create a project
 	project := &models.Project{
-		ID:          1,
-		OwnerID:     uint(user.ID[0])<<24 | uint(user.ID[1])<<16 | uint(user.ID[2])<<8 | uint(user.ID[3]),
+		ID:          uuid.New(),
+		UserID:      user.ID,
 		Name:        "削除対象プロジェクト",
 		Status:      "planning",
 	}
 	require.NoError(t, db.Create(project).Error)
 
 	t.Run("正常系: プロジェクトを削除できる", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/v1/projects/%d", project.ID), nil)
+		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/v1/projects/%s", project.ID.String()), nil)
 		rec := httptest.NewRecorder()
 
 		e.ServeHTTP(rec, req)
@@ -311,7 +397,7 @@ func TestProjectAPI_DeleteProject(t *testing.T) {
 	})
 
 	t.Run("異常系: 存在しないプロジェクトの削除でエラー", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodDelete, "/api/v1/projects/9999", nil)
+		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/v1/projects/%s", uuid.New().String()), nil)
 		rec := httptest.NewRecorder()
 
 		e.ServeHTTP(rec, req)
