@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
@@ -45,13 +47,17 @@ func (r *ProjectRepository) GetByIDWithDetails(id uuid.UUID) (*models.Project, e
 
 // ProjectListParams represents parameters for listing projects
 type ProjectListParams struct {
-	UserID uuid.UUID
-	Page   int
-	PerPage int
-	Status string
-	Search string
-	Sort   string
-	Order  string
+	UserID        uuid.UUID
+	Page          int
+	PerPage       int
+	Status        string
+	Search        string
+	Sort          string
+	Order         string
+	PeriodFrom    *time.Time
+	PeriodTo      *time.Time
+	MinProfitRate *float64
+	MaxProfitRate *float64
 }
 
 // List retrieves projects with pagination, filtering, and search
@@ -59,17 +65,40 @@ func (r *ProjectRepository) List(params ProjectListParams) ([]models.Project, in
 	var projects []models.Project
 	var total int64
 
-	query := r.db.Model(&models.Project{}).Where("user_id = ?", params.UserID)
+	query := r.db.Model(&models.Project{}).Where("projects.user_id = ?", params.UserID)
+
+	// Profit-rate filters and sorting read from budgets
+	needsBudgetJoin := params.MinProfitRate != nil || params.MaxProfitRate != nil || params.Sort == "profit_rate"
+	if needsBudgetJoin {
+		query = query.Joins("LEFT JOIN budgets ON budgets.project_id = projects.id")
+	}
 
 	// Apply status filter if provided
 	if params.Status != "" {
-		query = query.Where("status = ?", params.Status)
+		query = query.Where("projects.status = ?", params.Status)
 	}
 
 	// Apply search filter if provided
 	if params.Search != "" {
 		searchPattern := "%" + params.Search + "%"
-		query = query.Where("name ILIKE ? OR description ILIKE ?", searchPattern, searchPattern)
+		query = query.Where("(projects.name ILIKE ? OR projects.description ILIKE ?)", searchPattern, searchPattern)
+	}
+
+	// Apply period filter: keep projects whose duration overlaps the
+	// requested period (open-ended project dates always match)
+	if params.PeriodFrom != nil {
+		query = query.Where("(projects.end_date IS NULL OR projects.end_date >= ?)", *params.PeriodFrom)
+	}
+	if params.PeriodTo != nil {
+		query = query.Where("(projects.start_date IS NULL OR projects.start_date <= ?)", *params.PeriodTo)
+	}
+
+	// Apply profit-rate filters; projects without a budget count as 0%
+	if params.MinProfitRate != nil {
+		query = query.Where("COALESCE(budgets.profit_rate, 0) >= ?", *params.MinProfitRate)
+	}
+	if params.MaxProfitRate != nil {
+		query = query.Where("COALESCE(budgets.profit_rate, 0) <= ?", *params.MaxProfitRate)
 	}
 
 	// Count total records
@@ -78,18 +107,20 @@ func (r *ProjectRepository) List(params ProjectListParams) ([]models.Project, in
 	}
 
 	// Determine sort column
-	sortColumn := "created_at"
+	sortColumn := "projects.created_at"
 	switch params.Sort {
 	case "name":
-		sortColumn = "name"
+		sortColumn = "projects.name"
 	case "start_date":
-		sortColumn = "start_date"
+		sortColumn = "projects.start_date"
 	case "end_date":
-		sortColumn = "end_date"
+		sortColumn = "projects.end_date"
 	case "status":
-		sortColumn = "status"
+		sortColumn = "projects.status"
 	case "created_at":
-		sortColumn = "created_at"
+		sortColumn = "projects.created_at"
+	case "profit_rate":
+		sortColumn = "COALESCE(budgets.profit_rate, 0)"
 	}
 
 	// Determine sort order
@@ -167,10 +198,10 @@ func (r *ProjectRepository) GetProjectStats(projectID uuid.UUID) (*ProjectStats,
 
 // ProjectStats represents project statistics
 type ProjectStats struct {
-	ProjectID          uuid.UUID `json:"project_id"`
-	TotalTasks         int       `json:"total_tasks"`
-	TotalPlannedHours  float64   `json:"total_planned_hours"`
-	TotalActualHours   float64   `json:"total_actual_hours"`
-	CompletedTasks     int       `json:"completed_tasks"`
-	CompletionRate     float64   `json:"completion_rate"`
+	ProjectID         uuid.UUID `json:"project_id"`
+	TotalTasks        int       `json:"total_tasks"`
+	TotalPlannedHours float64   `json:"total_planned_hours"`
+	TotalActualHours  float64   `json:"total_actual_hours"`
+	CompletedTasks    int       `json:"completed_tasks"`
+	CompletionRate    float64   `json:"completion_rate"`
 }
