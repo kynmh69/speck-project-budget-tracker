@@ -63,6 +63,9 @@ Thumbs.db
 /frontend/.env.production
 /backend/.env.production
 
+# Claude Code local settings
+.claude/settings.local.json
+
 # Playwright
 frontend/test-results/
 frontend/playwright-report/
