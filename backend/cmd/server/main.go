@@ -12,6 +12,7 @@ import (
 	custommiddleware "github.com/your-org/project-budget-tracker/backend/internal/middleware"
 	"github.com/your-org/project-budget-tracker/backend/internal/repository"
 	"github.com/your-org/project-budget-tracker/backend/internal/service"
+	customvalidator "github.com/your-org/project-budget-tracker/backend/internal/validator"
 )
 
 func main() {
@@ -28,6 +29,7 @@ func main() {
 
 	// Initialize Echo
 	e := echo.New()
+	e.Validator = &customvalidator.EchoValidator{}
 
 	// Middleware
 	e.Use(middleware.Logger())
